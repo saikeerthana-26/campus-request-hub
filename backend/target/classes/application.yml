@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/crh}
+    username: ${SPRING_DATASOURCE_USERNAME:crh}
+    password: ${SPRING_DATASOURCE_PASSWORD:crh}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+crh:
+  jwt:
+    secret: ${CRH_JWT_SECRET:dev-secret-dev-secret-dev-secret-dev-secret}
+    issuer: "campus-request-hub"
+    ttlMinutes: 240
+  legacy:
+    baseUrl: ${CRH_LEGACY_BASE_URL:http://localhost:8081}
+  webhook:
+    url: ${CRH_WEBHOOK_URL:}
