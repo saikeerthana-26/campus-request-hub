@@ -1,0 +1,21 @@
+# Node
+node_modules/
+dist/
+npm-debug.log
+
+# Java
+target/
+*.log
+
+# Mac
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Docker volumes
+*.db
+
+# Env files
+.env

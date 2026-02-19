@@ -17,17 +17,22 @@ import java.util.Map;
 public class JwtService {
   private final SecretKey key;
   private final String issuer;
-  private final long ttlMinutes;
+  private final long ttlMillis;
 
   public JwtService(AppProps props) {
-    this.key = Keys.hmacShaKeyFor(props.jwt().secret().getBytes(StandardCharsets.UTF_8));
-    this.issuer = props.jwt().issuer();
-    this.ttlMinutes = props.jwt().ttlMinutes();
+    String secret = props.getJwt().getSecret();
+    if (secret == null || secret.isBlank()) {
+      throw new IllegalStateException("crh.jwt.secret must be set");
+    }
+
+    this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    this.issuer = props.getJwt().getIssuer();
+    this.ttlMillis = props.getJwt().getExpiration(); // milliseconds
   }
 
   public String createToken(String username, List<String> roles) {
     Instant now = Instant.now();
-    Instant exp = now.plusSeconds(ttlMinutes * 60);
+    Instant exp = now.plusMillis(ttlMillis);
 
     return Jwts.builder()
         .issuer(issuer)

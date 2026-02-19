@@ -1,7 +1,6 @@
 package edu.isu.crh.integrations;
 
 import edu.isu.crh.config.AppProps;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -9,19 +8,28 @@ import java.util.Map;
 
 @Component
 public class IntegrationClient {
+
+  private final AppProps props;
   private final WebClient legacyClient;
   private final WebClient webhookClient;
-  private final String webhookUrl;
 
   public IntegrationClient(AppProps props) {
+    this.props = props;
+
+    String legacyBaseUrl = props.getLegacyBaseUrl();
+    if (legacyBaseUrl == null || legacyBaseUrl.isBlank()) {
+      throw new IllegalArgumentException("Legacy base URL must be configured");
+    }
+
     this.legacyClient = WebClient.builder()
-        .baseUrl(props.legacy().baseUrl())
+        .baseUrl(legacyBaseUrl)
         .build();
 
+    // generic client (we'll pass full URL to .uri(...) for webhook)
     this.webhookClient = WebClient.builder().build();
-    this.webhookUrl = props.webhook().url();
   }
 
+  @SuppressWarnings("unchecked")
   public Map<String, Object> fetchEmployee(String employeeId) {
     return legacyClient.get()
         .uri("/legacy/employee/{id}", employeeId)
@@ -31,28 +39,29 @@ public class IntegrationClient {
   }
 
   public void syncToLegacy(Map<String, Object> payload) {
+    if (payload == null) {
+      throw new IllegalArgumentException("Payload cannot be null");
+    }
     legacyClient.post()
         .uri("/legacy/sync")
-        .contentType(MediaType.APPLICATION_JSON)
         .bodyValue(payload)
         .retrieve()
-        .bodyToMono(Void.class)
+        .toBodilessEntity()
         .block();
   }
 
-  public void sendWebhookEvent(Map<String, Object> event) {
-    if (webhookUrl == null || webhookUrl.isBlank()) return;
+  public void sendWebhookEvent(Map<String, Object> payload) {
+    if (payload == null) {
+      throw new IllegalArgumentException("Payload cannot be null");
+    }
+    String url = props.getWebhookUrl();
+    if (url == null || url.isBlank()) return;
 
     webhookClient.post()
-        .uri(webhookUrl)
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(event)
+        .uri(url) // full URL
+        .bodyValue(payload)
         .retrieve()
-        .bodyToMono(Void.class)
-        .onErrorResume(e -> {
-          // swallow webhook errors so core flow still works
-          return reactor.core.publisher.Mono.empty();
-        })
+        .toBodilessEntity()
         .block();
   }
 }

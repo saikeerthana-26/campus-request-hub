@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:15
     environment:
       POSTGRES_DB: crh
       POSTGRES_USER: crh
@@ -15,7 +15,7 @@ services:
     environment:
       PORT: 8081
     ports:
-      - "8081:8081"
+      - "8082:8081"
 
   backend:
     build: ./backend
@@ -30,12 +30,12 @@ services:
       - db
       - legacy
     ports:
-      - "8082:8080"   # host:container (host 8082 -> container 8080)
+      - "8083:8080"   # changed to avoid "8080 already in use"
 
   frontend:
     build: ./frontend
     environment:
-      VITE_API_BASE: "http://localhost:8082"
+      VITE_API_BASE: "http://localhost:8083" # must match backend host port above
     depends_on:
       - backend
     ports:

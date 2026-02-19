@@ -35,19 +35,26 @@ public class RequestController {
     return service.get(id);
   }
 
-  @GetMapping("/{id}/audit")
-  public Map<String, Object> audit(@PathVariable UUID id) {
+@GetMapping("/{id}/audit")
+public Map<String, Object> audit(@PathVariable("id") UUID id) {
+
     return service.getAudit(id);
   }
 
-  @PostMapping("/{id}/status")
-  public RequestEntity updateStatus(@PathVariable UUID id, @Valid @RequestBody UpdateStatusDto dto, Authentication auth) {
+@PostMapping("/{id}/status")
+public RequestEntity updateStatus(
+    @PathVariable("id") UUID id,
+    @Valid @RequestBody UpdateStatusDto dto,
+    Authentication auth
+) {
     return service.updateStatus(id, dto.status(), auth);
-  }
+}
+
 
   // Integration demo: fetch employee profile from legacy service
   @GetMapping("/legacy/employee/{employeeId}")
-  public Map<String, Object> legacyEmployee(@PathVariable String employeeId) {
-    return service.getEmployeeProfile(employeeId);
-  }
+public Map<String, Object> legacyEmployee(@PathVariable("employeeId") String employeeId) {
+  return service.getEmployeeProfile(employeeId);
+}
+
 }

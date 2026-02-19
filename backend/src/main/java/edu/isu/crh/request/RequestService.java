@@ -54,6 +54,7 @@ public class RequestService {
   }
 
   public RequestEntity get(UUID id) {
+    if (id == null) throw new IllegalArgumentException("Request ID cannot be null");
     return repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Request not found"));
   }
 
